@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'file_helper.dart';
+import '../helper/file_helper.dart';
 
 const String gsensorHeading = "timestamp,ax,ay,az";
 const String imuHeading = "timestamp,ax,ay,az,gx,gy,gz";

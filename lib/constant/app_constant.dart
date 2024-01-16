@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-import 'g_sensor.dart';
+import '../model/g_sensor.dart';
 
 // Define a constant to check if the app is running on desktop platform
 final bool kIsDesktop =
@@ -67,16 +67,13 @@ class AppConstant {
   static const Duration commandDelayDuration = Duration(milliseconds: 500);
   static const Duration oneSecondDelayDuration = Duration(seconds: 1);
   // ------ BWPS(bee wristband private protocol) Service ------ //
-  static const String bwpsServiceUuid =
-      // "00001523-1212-efde-1523-785feabcd123";
-      "000001ff-3c17-d293-8e48-14fe2e4da212";
-  static const String bwpsTxCharacteristic =
-      "0000ff02-0000-1000-8000-00805f9b34fb";
-  static const String bwpsRxCharacteristic =
-      // "00001524-1212-efde-1523-785feabcd123";
-      "0000ff03-0000-1000-8000-00805f9b34fb";
-  static const String bwpsDeviceNameCharacteristic =
-      "0000ff04-0000-1000-8000-00805f9b34fb";
+  static const String bwpsServiceUuid = "000001ff-3c17-d293-8e48-14fe2e4da212";
+  static const String bwpsTxCharacteristicUuid =
+      "ff02"; //0000ff02-0000-1000-8000-00805f9b34fb
+  static const String bwpsRxCharacteristicUuid =
+      "ff03"; //0000ff03-0000-1000-8000-00805f9b34fb
+  static const String bwpsDeviceNameCharacteristicUuid =
+      "ff04"; //0000ff04-0000-1000-8000-00805f9b34fb
   static const ConfigGsensor configGsensor =
       ConfigGsensor(featureCount: 3, bufferSizePerSample: 6);
   static const List<String> gestureTable = [

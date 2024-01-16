@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import '../bluetooth_le_service.dart';
+import 'package:skaiwalk_develop/service/ble_service.dart';
 import '../locator.dart';
 import 'communicate_protocol.dart';
 
@@ -27,7 +27,7 @@ class CommunicateTask {
       return;
     }
     if (Platform.isAndroid || Platform.isIOS) {
-      await locator<BLEService>().bwpsTxNotify(buffer);
+      await locator<BleService>().bwpsTxNotify(buffer);
     }
   }
 

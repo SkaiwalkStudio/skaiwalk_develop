@@ -1,7 +1,7 @@
 import 'dart:convert';
-import '../app_constant.dart';
-import '../log_model.dart';
-import '../skai_os_interface.dart';
+import '../constant/app_constant.dart';
+import '../model/log_model.dart';
+import '../skaios/skai_os_interface.dart';
 import 'communicate_protocol.dart';
 
 class BluetoothLogResolver {

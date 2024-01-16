@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../app_constant.dart';
-import '../gesture_detect_service.dart';
-import '../inertial_model.dart';
+import '../constant/app_constant.dart';
+import '../service/gesture_detect_service.dart';
+import '../model/inertial_model.dart';
 import '../locator.dart';
-import '../log_model.dart';
-import '../skai_os_interface.dart';
+import '../model/log_model.dart';
+import '../skaios/skai_os_interface.dart';
 import 'communicate_protocol.dart';
 
 class NotifyResolver {

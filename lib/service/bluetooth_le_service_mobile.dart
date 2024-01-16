@@ -1,19 +1,19 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import '../communicate/communicate_parse.dart';
-import '../communicate/communicate_protocol.dart';
-import 'app_constant.dart';
-import 'locator.dart';
+import '../../communicate/communicate_parse.dart';
+import '../../communicate/communicate_protocol.dart';
+import '../constant/app_constant.dart';
+import '../locator.dart';
+import 'ble_service.dart';
 import 'shared_prefs_service.dart';
-import 'skai_os_interface.dart';
-import 'time_helper.dart';
+import '../skaios/skai_os_interface.dart';
+import '../helper/time_helper.dart';
 
-class BLEService {
+class BLEServiceMobile extends BleService {
   final int rxBytesMaxLength = 244;
   String targetAddress = "";
   Future<void> init({void Function()? onConnected}) async {
-    debugPrint("<<<<<<<<<< init BLEService >>>>>>>>>>");
     this.onConnected = onConnected;
     if (adapterStateSubscription != null) {
       adapterStateSubscription?.cancel();
@@ -27,7 +27,7 @@ class BLEService {
       } else if (event == BluetoothAdapterState.off) {
         bluetoothAdapterState = BluetoothAdapterState.off;
         disconnect();
-        isWatchConnected = false;
+        connected = false;
         _clearResources();
       }
     });
@@ -42,7 +42,7 @@ class BLEService {
         if (result.device.remoteId.toString() == targetAddress) {
           debugPrint("target device ${result.device} scanned!!");
           stopScanning();
-          if (!isWatchConnected) {
+          if (!connected) {
             connect(result.device);
           }
         } else {
@@ -82,8 +82,10 @@ class BLEService {
   }
 
   bool _isWatchConnected = false;
-  bool get isWatchConnected => _isWatchConnected;
-  set isWatchConnected(bool status) {
+  @override
+  bool get connected => _isWatchConnected;
+  @override
+  set connected(bool status) {
     if (_isWatchConnected != status) {
       _isWatchConnected = status;
       notifyUiTask(BluetoothServiceType.connected, param: _isWatchConnected);
@@ -114,7 +116,118 @@ class BLEService {
   final Map<DeviceIdentifier, StreamController<List<BluetoothService>>>
       servicesStream = {};
 
-  void autoScan() {
+  @override
+  Future<void> startScanning() async {
+    if (connected) {
+      notifyUiTask(BluetoothServiceType.connected, param: true);
+      return;
+    }
+    if (isScanning) return;
+    // targetAddress = await SharedPrefsService().bondedAddress;
+    // if (targetAddress.isEmpty) {
+    //   debugPrint("targetAddress is empty, please bond first");
+    //   return;
+    // }
+    isScanning = true;
+    await FlutterBluePlus.startScan(
+            timeout: const Duration(seconds: 10), androidUsesFineLocation: true)
+        .then((value) {
+      debugPrint('startScan finished');
+      _autoScan();
+    });
+    isScanning = false;
+  }
+
+  @override
+  Future<void> stopScanning() async {
+    isScanning = false;
+    await FlutterBluePlus.stopScan();
+    // _scanSubScription.cancel();
+    // scanTimer = null;
+  }
+
+  @override
+  Future<void> connect(dynamic device) async {
+    BluetoothDevice currentDevice = device as BluetoothDevice;
+    await disconnect();
+    await _clearResources();
+    debugPrint('Connecting...');
+    await currentDevice.connect(autoConnect: false);
+    // The subscription cannot be null due to the auto-reconnect feature.
+    connectionStateSubscription =
+        currentDevice.connectionState.listen((state) async {
+      if (state == BluetoothConnectionState.disconnected) {
+        debugPrint("Disconnected.");
+        connected = false;
+        await disconnect();
+        targetDevice = null;
+        await _clearResources();
+        if (userDisconnect) {
+          debugPrint('User Disconnect');
+          userDisconnect = false;
+        } else {
+          _autoScan();
+        }
+      } else if (state == BluetoothConnectionState.connected) {
+        debugPrint("Connected!");
+        connected = true;
+        onConnected?.call();
+        targetDevice = currentDevice;
+        await currentDevice.requestMtu(247);
+        servicesStream[currentDevice.remoteId] ??=
+            StreamController<List<BluetoothService>>();
+
+        _servicesSubscription ??= servicesStream[currentDevice.remoteId]!
+            .stream
+            .listen((services) async {
+          for (var service in services) {
+            if (service.uuid.toString() == AppConstant.bwpsServiceUuid) {
+              for (var characteristic in service.characteristics) {
+                var characteristicsUUiD = characteristic.uuid.toString();
+                if (characteristicsUUiD ==
+                    AppConstant.bwpsTxCharacteristicUuid) {
+                  bwpsTxCharacteristic = characteristic;
+                } else if (characteristicsUUiD ==
+                    AppConstant.bwpsRxCharacteristicUuid) {
+                  bwpsRxCharacteristic = characteristic;
+                  //https://github.com/pauldemarco/flutter_blue/issues/295#issuecomment-549997455
+                  //Better to be placed here before finishing iterating
+                  await bwpsRxCharacteristic?.setNotifyValue(true);
+                  await Future.delayed(AppConstant.commandDelayDuration);
+                } else if (characteristicsUUiD ==
+                    AppConstant.bwpsDeviceNameCharacteristicUuid) {
+                  bwpsDeviceNameCharacteristic = characteristic;
+                }
+              }
+              _bwpsRxSubscription = _startListeningRxCharacteristic();
+
+              notifyUiTask(BluetoothServiceType.bwpsConnected, param: true);
+            }
+          }
+        });
+
+        await currentDevice.discoverServices();
+        servicesStream[currentDevice.remoteId] ??=
+            StreamController<List<BluetoothService>>();
+        servicesStream[currentDevice.remoteId]!.add(currentDevice.servicesList);
+      }
+    });
+  }
+
+  @override
+  Future<void> disconnect() async {
+    return targetDevice?.disconnect();
+  }
+
+  @override
+  Future<void> bwpsTxNotify(List<int> bytes) async {
+    if (bwpsTxCharacteristic == null) {
+      return;
+    }
+    await bwpsTxCharacteristic?.write(bytes, withoutResponse: false);
+  }
+
+  void _autoScan() {
     debugPrint("autoScan intent");
     if (scanTimer != null) {
       scanTimer?.cancel();
@@ -123,7 +236,7 @@ class BLEService {
     scanTimer = TimeHelper.oneTimer(
         seconds: 20,
         timerOutCallback: () {
-          if (!isWatchConnected) {
+          if (!connected) {
             startScanning();
             debugPrint('start autoScan');
           } else {
@@ -134,124 +247,7 @@ class BLEService {
         });
   }
 
-  Future<void> startScanning() async {
-    if (isWatchConnected) {
-      notifyUiTask(BluetoothServiceType.connected, param: true);
-      return;
-    }
-    if (isScanning) return;
-    targetAddress = await SharedPrefsService().bondedAddress;
-    if (targetAddress.isEmpty) {
-      debugPrint("targetAddress is empty, please bond first");
-      return;
-    }
-    isScanning = true;
-    await FlutterBluePlus.startScan(
-            timeout: const Duration(seconds: 10), androidUsesFineLocation: true)
-        .then((value) {
-      debugPrint('startScan finished');
-      autoScan();
-    });
-    isScanning = false;
-  }
-
-  void stopScanning() {
-    isScanning = false;
-    FlutterBluePlus.stopScan();
-    // _scanSubScription.cancel();
-    // scanTimer = null;
-  }
-
-  // https://github.com/pauldemarco/flutter_blue/issues/525
-  Future<void> connect(BluetoothDevice device) async {
-    await disconnect();
-    await _clearResources();
-    debugPrint('Connecting...');
-    await device.connect(autoConnect: false);
-    // The subscription cannot be null due to the auto-reconnect feature.
-    connectionStateSubscription = device.connectionState.listen((state) async {
-      if (state == BluetoothConnectionState.disconnected) {
-        debugPrint("Disconnected.");
-        isWatchConnected = false;
-        await disconnect();
-        targetDevice = null;
-        await _clearResources();
-        if (userDisconnect) {
-          debugPrint('User Disconnect');
-          userDisconnect = false;
-        } else {
-          autoScan();
-        }
-      } else if (state == BluetoothConnectionState.connected) {
-        debugPrint("Connected!");
-        isWatchConnected = true;
-        onConnected?.call();
-        targetDevice = device;
-        await device.requestMtu(247);
-        servicesStream[device.remoteId] ??=
-            StreamController<List<BluetoothService>>();
-
-        _servicesSubscription ??=
-            servicesStream[device.remoteId]!.stream.listen((services) async {
-          for (var service in services) {
-            if (service.uuid.toString() == AppConstant.bwpsServiceUuid) {
-              for (var characteristic in service.characteristics) {
-                var characteristicsUUiD = characteristic.uuid.toString();
-                if (characteristicsUUiD == AppConstant.bwpsTxCharacteristic) {
-                  bwpsTxCharacteristic = characteristic;
-                } else if (characteristicsUUiD ==
-                    AppConstant.bwpsRxCharacteristic) {
-                  bwpsRxCharacteristic = characteristic;
-                  //https://github.com/pauldemarco/flutter_blue/issues/295#issuecomment-549997455
-                  //Better to be placed here before finishing iterating
-                  await bwpsRxCharacteristic?.setNotifyValue(true);
-                  await Future.delayed(AppConstant.commandDelayDuration);
-                } else if (characteristicsUUiD ==
-                    AppConstant.bwpsDeviceNameCharacteristic) {
-                  bwpsDeviceNameCharacteristic = characteristic;
-                }
-              }
-              _bwpsRxSubscription = startListeningRxCharacteristic();
-
-              notifyUiTask(BluetoothServiceType.bwpsConnected, param: true);
-            }
-          }
-        });
-
-        await device.discoverServices();
-        servicesStream[device.remoteId] ??=
-            StreamController<List<BluetoothService>>();
-        servicesStream[device.remoteId]!.add(device.servicesList ?? []);
-      }
-    });
-  }
-
-  Future<void> disconnect() async {
-    return targetDevice?.disconnect();
-  }
-
-  Future<void> _clearResources() async {
-    debugPrint("Clear Bluetooth low energy connection Resources");
-    await _bwpsRxSubscription?.cancel();
-    await connectionStateSubscription?.cancel();
-  }
-
-  Future<void> disposeBLEService() async {
-    await _clearResources();
-    await adapterStateSubscription?.cancel();
-    adapterStateSubscription = null;
-    await scanSubscription?.cancel();
-    scanSubscription = null;
-  }
-
-  Future<void> bwpsTxNotify(List<int> bytes) async {
-    if (bwpsTxCharacteristic == null) {
-      return;
-    }
-    await bwpsTxCharacteristic?.write(bytes, withoutResponse: false);
-  }
-
-  StreamSubscription<void> startListeningRxCharacteristic() {
+  StreamSubscription<void> _startListeningRxCharacteristic() {
     return bwpsRxCharacteristic!.onValueReceived.listen((buffer) {
       if (buffer.isEmpty) {
         return;
@@ -259,5 +255,11 @@ class BLEService {
       locator<CommunicateParse>()
           .resolveL2Frame(buffer, from: CommunicateDevice.watch);
     });
+  }
+
+  Future<void> _clearResources() async {
+    debugPrint("Clear Bluetooth low energy connection Resources");
+    await _bwpsRxSubscription?.cancel();
+    await connectionStateSubscription?.cancel();
   }
 }

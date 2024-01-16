@@ -4,13 +4,14 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'app_constant.dart';
-import 'app_dialog.dart';
-import 'locator.dart';
-import 'log_model.dart';
+import 'package:win_ble/win_ble.dart';
+import '../constant/app_constant.dart';
+import '../ui/app_dialog.dart';
+import '../locator.dart';
+import '../model/log_model.dart';
 import 'skai_os_interface.dart';
-import 'time_helper.dart';
-import 'ui_helper.dart';
+import '../helper/time_helper.dart';
+import '../helper/ui_helper.dart';
 
 class SkaiOSProvider extends ChangeNotifier {
   bool _isWatchConnected = false;
@@ -27,6 +28,15 @@ class SkaiOSProvider extends ChangeNotifier {
   set isBluetoothEnabled(bool val) {
     if (val != _isBluetoothEnabled) {
       _isBluetoothEnabled = val;
+      notifyListeners();
+    }
+  }
+
+  bool _isScanning = false;
+  bool get isScanning => _isScanning;
+  set isScanning(bool val) {
+    if (val != _isScanning) {
+      _isScanning = val;
       notifyListeners();
     }
   }
@@ -105,8 +115,15 @@ class SkaiOSProvider extends ChangeNotifier {
   ///////COMMUNICATE WITH WATCH///////
   Future<void> pairWatchBluetoothOnMobile(BluetoothDevice device) async {
     final deviceJson = {
-      // 'name': device.platformName,
       'address': device.remoteId.toString(),
+    };
+    notifySkaiOSService(ServiceType.bluetooth, BluetoothServiceType.pair.index,
+        param: deviceJson);
+  }
+
+  Future<void> pairWatchBluetoothOnWindows(BleDevice device) async {
+    final deviceJson = {
+      'address': device.address,
     };
     notifySkaiOSService(ServiceType.bluetooth, BluetoothServiceType.pair.index,
         param: deviceJson);
@@ -115,6 +132,8 @@ class SkaiOSProvider extends ChangeNotifier {
   Future<void> pairWatchBluetooth(dynamic device) async {
     if (Platform.isAndroid || Platform.isIOS) {
       await pairWatchBluetoothOnMobile(device);
+    } else if (Platform.isWindows) {
+      await pairWatchBluetoothOnWindows(device);
     }
   }
 
@@ -210,19 +229,18 @@ class SkaiOSProvider extends ChangeNotifier {
           switch (bluetoothServiceType) {
             case BluetoothServiceType.connected:
               {
-                bool isConnected = param;
-                isWatchConnected = isConnected;
+                isWatchConnected = param as bool;
               }
               break;
             case BluetoothServiceType.scanning:
               {
                 debugPrint("scanning: $param");
+                isScanning = param as bool;
               }
               break;
             case BluetoothServiceType.enable:
               {
-                bool isEnabled = param;
-                isBluetoothEnabled = isEnabled;
+                isBluetoothEnabled = param as bool;
               }
               break;
             case BluetoothServiceType.bwpsConnected:

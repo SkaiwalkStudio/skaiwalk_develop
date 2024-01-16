@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 // import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
-
 class ScanResultTile extends StatelessWidget {
   const ScanResultTile({
     Key? key,
@@ -17,16 +16,16 @@ class ScanResultTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   Widget _buildTitle(BuildContext context) {
-    if (result.device.name.isNotEmpty) {
+    if (result.device.platformName.isNotEmpty) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(result.device.name,
+          Text(result.device.platformName,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyLarge),
           Text(
-            result.device.id.toString(),
+            result.device.remoteId.toString(),
             style: Theme.of(context).textTheme.bodyLarge,
           )
         ],
@@ -119,8 +118,12 @@ class ScanResultTile extends StatelessWidget {
             (result.advertisementData.serviceUuids.isNotEmpty)
                 ? result.advertisementData.serviceUuids.join(', ').toUpperCase()
                 : 'N/A'),
-        _buildAdvRow(context, 'Service Data',
-            getNiceServiceData(result.advertisementData.serviceData) ?? 'N/A'),
+        _buildAdvRow(
+            context,
+            'Service Data',
+            getNiceServiceData(result.advertisementData.serviceData
+                    .map((key, value) => MapEntry(key.toString(), value))) ??
+                'N/A'),
       ],
     );
   }

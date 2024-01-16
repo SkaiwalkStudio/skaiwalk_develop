@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import 'development_screen.dart';
+import 'ui/develop_screen.dart';
 import 'locator.dart';
-import 'log_model.dart';
-import 'skaios_provider.dart';
+import 'model/log_model.dart';
+import 'skaios/skaios_provider.dart';
 
 const String uid = "developer";
 void main() {
@@ -81,7 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: const DevelopmentScreen(),
+      body: const DevelopScreen(),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'ui_helper.dart';
+import '../helper/ui_helper.dart';
 
 class AppDialogs {
   static loadingDialog({required Widget child}) => UIHelper.blurredBackground(

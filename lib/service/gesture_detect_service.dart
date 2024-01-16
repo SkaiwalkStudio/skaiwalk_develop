@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
-import 'inertial_model.dart';
+import '../model/inertial_model.dart';
 
 class AiModel {
   String title;

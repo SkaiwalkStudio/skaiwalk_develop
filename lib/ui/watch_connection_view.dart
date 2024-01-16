@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'bond_screen.dart';
-import 'locator.dart';
-import 'shared_prefs_service.dart';
-import 'skaios_provider.dart';
-import 'text_constant.dart';
+import '../locator.dart';
+import '../service/shared_prefs_service.dart';
+import '../skaios/skaios_provider.dart';
+import '../constant/text_constant.dart';
 
 class WatchConnectionView extends StatelessWidget {
   final bool isConnected;

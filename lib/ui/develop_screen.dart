@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:skaiwalk_develop/file_helper.dart';
+import 'package:skaiwalk_develop/helper/file_helper.dart';
 import 'package:skaiwalk_develop/main.dart';
-import 'package:skaiwalk_develop/text_constant.dart';
-import 'app_constant.dart';
+import 'package:skaiwalk_develop/constant/text_constant.dart';
+import '../constant/app_constant.dart';
 import 'app_dialog.dart';
 import 'common_menu_card.dart';
-import 'external_storage_service.dart';
-import 'locator.dart';
-import 'log_model.dart';
+import '../service/external_storage_service.dart';
+import '../locator.dart';
+import '../model/log_model.dart';
 import 'log_view.dart';
-import 'skai_os_interface.dart';
-import 'skaios_provider.dart';
+import '../skaios/skai_os_interface.dart';
+import '../skaios/skaios_provider.dart';
 import 'watch_connection_view.dart';
 
 bool bluetoothLog = true;
@@ -23,8 +23,8 @@ bool developmentSettings = false;
 bool gestureDemo = false;
 bool slideControlPanel = false;
 
-class DevelopmentScreen extends StatelessWidget {
-  const DevelopmentScreen({super.key});
+class DevelopScreen extends StatelessWidget {
+  const DevelopScreen({super.key});
 
   Widget buildWatchConnectionCardMobile() {
     return Selector<SkaiOSProvider, bool>(
@@ -55,7 +55,7 @@ class DevelopmentScreen extends StatelessWidget {
       Visibility(
         visible: developmentNotify,
         child: MenuCard(
-            title: "Dev Notify",
+            title: "Gsensor",
             child: Selector<SkaiOSProvider, String>(
               selector: (_, notifier) => notifier.selectedMotionLabel,
               builder: (_, label, __) => Column(children: [

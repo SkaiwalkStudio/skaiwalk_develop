@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'bluetooth_le_service.dart';
-import 'gesture_detect_service.dart';
-import 'inertial_model.dart';
-import 'locator.dart';
+import '../service/ble_service.dart';
+import '../service/gesture_detect_service.dart';
+import '../model/inertial_model.dart';
+import '../locator.dart';
 import 'skaios_provider.dart';
 
 enum ServiceType {
@@ -191,23 +191,23 @@ Future<void> skaiOSServiceHandler(Map<String, dynamic>? arg) async {
         switch (bluetoothType) {
           case BluetoothServiceType.disconnect:
             {
-              await locator<BLEService>().disconnect();
+              await locator<BleService>().disconnect();
             }
             break;
           case BluetoothServiceType.pair:
             {
               final deviceJson = param;
               final device = BluetoothDevice.fromId(deviceJson['address']);
-              await locator<BLEService>().connect(device);
+              await locator<BleService>().connect(device);
             }
             break;
           case BluetoothServiceType.scan:
             {
               bool isEnable = param;
               if (isEnable) {
-                await locator<BLEService>().startScanning();
+                await locator<BleService>().startScanning();
               } else {
-                locator<BLEService>().stopScanning();
+                locator<BleService>().stopScanning();
               }
             }
             break;

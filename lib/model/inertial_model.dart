@@ -2,10 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'app_constant.dart';
-import 'external_storage_service.dart';
-import 'main.dart';
-import 'shared_prefs_service.dart';
+import '../constant/app_constant.dart';
+import '../service/external_storage_service.dart';
+import '../main.dart';
 
 /// 存放六軸數據的物件
 class MARGModel {
