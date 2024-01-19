@@ -175,7 +175,8 @@ enum SettingsKey {
   keyBbproCreateConnectionRequest(0x64),
   keyMotorStrengthSetting(0x65),
   keyMotorPeriodSetting(0x66),
-  keyGestureAccelLimitSetting(0x67);
+  keyGestureAccelLimitSetting(0x67),
+  keyPeripheralDebugSwitch(0x68);
 
   final int value;
   const SettingsKey(this.value);
@@ -313,6 +314,8 @@ enum SettingsKey {
         return SettingsKey.keyMotorPeriodSetting;
       case 0x67:
         return SettingsKey.keyGestureAccelLimitSetting;
+      case 0x68:
+        return SettingsKey.keyPeripheralDebugSwitch;
       default:
         throw ArgumentError('Invalid SettingsKey value');
     }
@@ -400,7 +403,8 @@ enum NotifyKey {
   keyWatchSysReturn(0x43),
   keyReturnChatIntent(0x44),
   keyChatResult(0x45),
-  keyMediaTitle(0x46);
+  keyMediaTitle(0x46),
+  keyQuaternionData(0x47);
 
   final int value;
   const NotifyKey(this.value);
@@ -500,6 +504,11 @@ enum NotifyKey {
         return NotifyKey.keyReturnChatIntent;
       case 0x45:
         return NotifyKey.keyChatResult;
+      case 0x46:
+        return NotifyKey.keyMediaTitle;
+      case 0x47:
+        return NotifyKey.keyQuaternionData;
+      
       default:
         throw ArgumentError('Invalid value for NotifyKey: $value');
     }
@@ -794,6 +803,7 @@ enum L1SendType {
   l1SendChatIntent,
   l1SendChatGPTResult,
   l1SendNoteToWatch,
+  l1SendDebugSwitchCommand,
 }
 
 // inside background service

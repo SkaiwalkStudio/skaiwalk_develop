@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:skaiwalk_develop/service/ble_service.dart';
+import 'package:skaiwalk_develop/skaios/skai_os_interface.dart';
+import 'package:skaiwalk_develop/skaios/watch_peripheral_provider.dart';
 import '../locator.dart';
 import 'communicate_protocol.dart';
 
@@ -39,6 +41,21 @@ class CommunicateTask {
         keyValue: key.value,
         payload: payload);
   }
+
+////////////////////
+  /// Set Config Command
+  Future<void> sendSetConfigCommand(SettingsKey key,
+      {List<int>? payload}) async {
+    await sendBluetoothCommand(
+        commandId: WristbandCommunicateCommand.setConfigCommandId,
+        keyValue: key.value,
+        payload: payload);
+  }
+
+  Future<void> setPeripheralDebugSwitch(WatchPeripheralSwitch command) async {
+    await sendSetConfigCommand(SettingsKey.keyPeripheralDebugSwitch,
+        payload: [command.index]);
+  }
 }
 
 Future<void> l1SendHandler(Map<String, dynamic>? params) async {
@@ -47,8 +64,11 @@ Future<void> l1SendHandler(Map<String, dynamic>? params) async {
   final data = params['param'];
   debugPrint("l1SendHandler: $type, $data");
   switch (type) {
-    case L1SendType.l1SendVoiceRecognitionResult:
-      {}
+    case L1SendType.l1SendDebugSwitchCommand:
+      {
+        WatchPeripheralSwitch command = WatchPeripheralSwitch.values[data];
+        await locator<CommunicateTask>().setPeripheralDebugSwitch(command);
+      }
       break;
     default:
       break;

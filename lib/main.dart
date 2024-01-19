@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
+import 'skaios/watch_peripheral_provider.dart';
 import 'ui/develop_screen.dart';
 import 'locator.dart';
 import 'model/log_model.dart';
@@ -46,6 +47,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+            lazy: true,
+            create: (context) => locator<WatchPeripheralProvider>()),
         ChangeNotifierProvider(
             lazy: true, create: (context) => locator<SkaiOSProvider>()),
         ChangeNotifierProvider(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 class TimeHelper {
   static Timer oneTimer(
@@ -29,4 +30,7 @@ class TimeHelper {
     );
     return timer;
   }
+
+  static String formattedDate(DateTime date) =>
+      DateFormat('yyyy-MM-dd').format(date);
 }

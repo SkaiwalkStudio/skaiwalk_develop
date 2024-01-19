@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import '../communicate/communicate_protocol.dart';
 import '../service/ble_service.dart';
 import '../service/gesture_detect_service.dart';
 import '../model/inertial_model.dart';
 import '../locator.dart';
 import 'skaios_provider.dart';
+import 'watch_peripheral_provider.dart';
 
 enum ServiceType {
   bluetooth,
@@ -15,6 +17,7 @@ enum ServiceType {
   motionTracking,
   gestureDetect,
   gestureDataCollction,
+  heartrateDataCollction,
   notification,
   navigation,
   chatGPT,
@@ -61,6 +64,7 @@ enum WatchSystemServiceType {
   gestureModeStatus,
   flashing,
   flashingProgress,
+  peripheralDebugSwitch,
 }
 
 enum MotionTrackingServiceType {
@@ -77,6 +81,11 @@ enum GestureDataCollctionServiceType {
   selectLabel,
   delete,
   save,
+  plot,
+}
+
+enum HRDataCollctionServiceType {
+  plot,
 }
 
 enum NotificationServiceType {
@@ -216,6 +225,19 @@ Future<void> skaiOSServiceHandler(Map<String, dynamic>? arg) async {
         }
       }
       break;
+    case ServiceType.watchSystem:
+      final watchSystemServiceType = WatchSystemServiceType.values[type];
+      {
+        switch (watchSystemServiceType) {
+          case WatchSystemServiceType.peripheralDebugSwitch:
+            {
+              l1Send(L1SendType.l1SendDebugSwitchCommand, param: param);
+            }
+            break;
+          default:
+            break;
+        }
+      }
     case ServiceType.gestureDetect:
       {
         final gestureDetectType = GestureDetectServiceType.values[type];
@@ -285,6 +307,8 @@ Future<void> skaiOSServiceHandler(Map<String, dynamic>? arg) async {
               await locator<MARGDatabaseService>().saveDataset(label, dataset);
               await locator<MARGDatabaseService>().delete(label);
             }
+            break;
+          default:
             break;
         }
       }

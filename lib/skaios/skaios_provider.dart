@@ -2,16 +2,19 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:win_ble/win_ble.dart';
 import '../constant/app_constant.dart';
+import '../model/inertial_model.dart';
 import '../ui/app_dialog.dart';
 import '../locator.dart';
 import '../model/log_model.dart';
 import 'skai_os_interface.dart';
 import '../helper/time_helper.dart';
 import '../helper/ui_helper.dart';
+import 'watch_peripheral_provider.dart';
 
 class SkaiOSProvider extends ChangeNotifier {
   bool _isWatchConnected = false;
@@ -219,6 +222,24 @@ class SkaiOSProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<List<FlSpot>> _accelerationFlSpotList = [];
+  List<List<FlSpot>> get accelerationFlSpotList => _accelerationFlSpotList;
+  set accelerationFlSpotList(List<List<FlSpot>> val) {
+    if (val != _accelerationFlSpotList) {
+      _accelerationFlSpotList = val;
+      notifyListeners();
+    }
+  }
+
+  List<List<FlSpot>> _ppgFlSpotList = [];
+  List<List<FlSpot>> get ppgFlSpotList => _ppgFlSpotList;
+  set ppgFlSpotList(List<List<FlSpot>> val) {
+    if (val != _ppgFlSpotList) {
+      _ppgFlSpotList = val;
+      notifyListeners();
+    }
+  }
+
   Future<void> uiHandler(ServiceType serviceType, int type,
       {dynamic param}) async {
     switch (serviceType) {
@@ -253,12 +274,93 @@ class SkaiOSProvider extends ChangeNotifier {
           }
         }
         break;
+      case ServiceType.watchSystem:
+        final watchSystemServiceType = WatchSystemServiceType.values[type];
+        {
+          switch (watchSystemServiceType) {
+            case WatchSystemServiceType.peripheralDebugSwitch:
+              {
+                final command = WatchPeripheralSwitch.values[param];
+                switch (command) {
+                  case WatchPeripheralSwitch.imuSwitchOn:
+                    {
+                      locator<WatchPeripheralProvider>().imuSwitch = true;
+                    }
+                    break;
+                  case WatchPeripheralSwitch.imuSwitchOff:
+                    {
+                      locator<WatchPeripheralProvider>().imuSwitch = false;
+                    }
+                    break;
+                  case WatchPeripheralSwitch.ppgSwitchOn:
+                    {
+                      locator<WatchPeripheralProvider>().ppgSwitch = true;
+                    }
+                    break;
+                  case WatchPeripheralSwitch.ppgSwitchOff:
+                    {
+                      locator<WatchPeripheralProvider>().ppgSwitch = false;
+                    }
+                    break;
+                }
+              }
+              break;
+            default:
+              break;
+          }
+        }
+        break;
       case ServiceType.gestureDetect:
         final gestureDetectType = GestureDetectServiceType.values[type];
         switch (gestureDetectType) {
           case GestureDetectServiceType.label:
             {
               gestureIndex = param;
+            }
+            break;
+          default:
+            break;
+        }
+        break;
+      case ServiceType.gestureDataCollction:
+        final gestureDataCollctionType =
+            GestureDataCollctionServiceType.values[type];
+        switch (gestureDataCollctionType) {
+          case GestureDataCollctionServiceType.plot:
+            {
+              List<dynamic> mapList = param;
+              List<MARGModel> margList = mapList
+                  .map(
+                      (marg) => MARGModel.fromMap(marg as Map<String, dynamic>))
+                  .toList();
+              // length = 3
+              accelerationFlSpotList = List.generate(3, (i) {
+                List<FlSpot> flSpotList = [];
+                for (int j = 0; j < margList.length; j++) {
+                  flSpotList.add(FlSpot(j.toDouble(), margList[j].dataset[i]));
+                }
+                return flSpotList;
+              }).toList();
+            }
+            break;
+          default:
+            break;
+        }
+        break;
+      case ServiceType.heartrateDataCollction:
+        final hrDataCollctionType = HRDataCollctionServiceType.values[type];
+        switch (hrDataCollctionType) {
+          case HRDataCollctionServiceType.plot:
+            {
+              List<dynamic> dataset = param;
+              List<int> hrList = dataset.cast<int>();
+              ppgFlSpotList = List.generate(1, (i) {
+                List<FlSpot> flSpotList = [];
+                for (int j = 0; j < hrList.length; j++) {
+                  flSpotList.add(FlSpot(j.toDouble(), hrList[j].toDouble()));
+                }
+                return flSpotList;
+              }).toList();
             }
             break;
           default:

@@ -11,6 +11,7 @@ import 'service/gesture_detect_service.dart';
 import 'model/inertial_model.dart';
 import 'model/log_model.dart';
 import 'skaios/skaios_provider.dart';
+import 'skaios/watch_peripheral_provider.dart';
 
 GetIt locator = GetIt.instance;
 void registerLocator() {
@@ -20,6 +21,7 @@ void registerLocator() {
   locator.registerLazySingleton(() => GestureDetectService());
   locator.registerLazySingleton(() => MARGDatabaseService());
   locator.registerLazySingleton(() => LogModel());
+  locator.registerLazySingleton(() => WatchPeripheralProvider());
   locator.registerLazySingleton(() => SkaiOSProvider());
 }
 

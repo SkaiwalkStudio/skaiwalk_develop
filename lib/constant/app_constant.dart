@@ -58,6 +58,7 @@ class Developer {
 }
 
 class AppConstant {
+  static const defaultUid = "developer";
   static const bool isDevelopmentMode = true;
   static const bool usingDebugToast = true;
   static const bool usingDebugLog = true;
@@ -79,8 +80,6 @@ class AppConstant {
   static const List<String> gestureTable = [
     "unknown",
     "tap",
-    "snap",
-    "grab",
-    "release",
+    "wave",
   ];
 }

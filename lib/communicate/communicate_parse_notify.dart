@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../constant/app_constant.dart';
+import '../helper/time_helper.dart';
+import '../service/external_storage_service.dart';
 import '../service/gesture_detect_service.dart';
 import '../model/inertial_model.dart';
 import '../locator.dart';
@@ -30,6 +32,11 @@ class NotifyResolver {
           //   GestureDetectServiceType.classify.index,
           //   param: dataset.map((e) => e.toMap()).toList(),
           // );
+          await notifySkaiOSProvider(
+            ServiceType.gestureDataCollction,
+            GestureDataCollctionServiceType.plot.index,
+            param: dataset.map((e) => e.toMap()).toList(),
+          );
         }
         break;
       case NotifyKey.keyGestureDetect:
@@ -44,6 +51,25 @@ class NotifyResolver {
             );
             debugMessage = "${gestureType.name}[$label] on mobile!";
           }
+        }
+        break;
+      case NotifyKey.keyHeartRateSensorSample:
+        {
+          List<int> samples = [];
+          for (var i = 0; i < 30; i++) {
+            Uint8List array =
+                Uint8List.fromList([pValue[i * 2], pValue[i * 2 + 1]]);
+            int value = (array[0] << 8) | array[1];
+            samples.add(value);
+          }
+          debugMessage =
+              "heart rate samples len = ${samples.length} "; //"From buf = $pValue, Got heart samples = $samples";
+          await storeHeartSamples(samples);
+          await notifySkaiOSProvider(
+            ServiceType.heartrateDataCollction,
+            HRDataCollctionServiceType.plot.index,
+            param: samples,
+          );
         }
         break;
       default:
@@ -131,5 +157,20 @@ class NotifyResolver {
     hintMesaage += "[$amountOfCollectedLabel]";
 
     return hintMesaage;
+  }
+
+  Future<void> storeHeartSamples(List<int> samples) async {
+    List<String> stringSamples =
+        samples.map((sample) => sample.toString()).toList();
+    await ExtStorageService()
+        .writeCSVFileToTargetDirectoryWithHeading(
+            "HRM", stringSamples, AppConstant.defaultUid,
+            fileName:
+                'HeartSamples_${TimeHelper.formattedDate(DateTime.now())}')
+        .then((file) {
+      if (file != null) {
+        debugPrint("File generated:$file");
+      }
+    });
   }
 }

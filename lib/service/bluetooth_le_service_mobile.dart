@@ -6,7 +6,6 @@ import '../../communicate/communicate_protocol.dart';
 import '../constant/app_constant.dart';
 import '../locator.dart';
 import 'ble_service.dart';
-import 'shared_prefs_service.dart';
 import '../skaios/skai_os_interface.dart';
 import '../helper/time_helper.dart';
 
@@ -137,6 +136,7 @@ class BLEServiceMobile extends BleService {
     });
     isScanning = false;
   }
+  
 
   @override
   Future<void> stopScanning() async {
