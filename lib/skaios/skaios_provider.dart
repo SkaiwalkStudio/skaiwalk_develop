@@ -15,6 +15,7 @@ import 'skai_os_interface.dart';
 import '../helper/time_helper.dart';
 import '../helper/ui_helper.dart';
 import 'watch_peripheral_provider.dart';
+import 'package:vector_math/vector_math_64.dart' show Quaternion, Vector3;
 
 class SkaiOSProvider extends ChangeNotifier {
   bool _isWatchConnected = false;
@@ -222,6 +223,18 @@ class SkaiOSProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Create a StreamController for Quaternion
+  final StreamController<Quaternion> _quaternionStreamController =
+      StreamController<Quaternion>();
+
+  // Expose the stream to be used in your widgets
+  Stream<Quaternion> get quaternionStream => _quaternionStreamController.stream;
+
+  // Function to add data to the stream
+  void addQuaternion(Quaternion quaternion) {
+    _quaternionStreamController.sink.add(quaternion);
+  }
+
   List<List<FlSpot>> _accelerationFlSpotList = [];
   List<List<FlSpot>> get accelerationFlSpotList => _accelerationFlSpotList;
   set accelerationFlSpotList(List<List<FlSpot>> val) {
@@ -341,6 +354,25 @@ class SkaiOSProvider extends ChangeNotifier {
                 }
                 return flSpotList;
               }).toList();
+            }
+            break;
+          default:
+            break;
+        }
+        break;
+      case ServiceType.motionTracking:
+        final motionTrackingType = MotionTrackingServiceType.values[type];
+        switch (motionTrackingType) {
+          case MotionTrackingServiceType.quaternion:
+            {
+              List<dynamic> data = param;
+              List<double> qArray =
+                  data.map((e) => (e as double) * 100.0).toList();
+              // debugPrint("quaternions: $qArray");
+              // rotate cube by quaternion
+              Quaternion quaternion =
+                  Quaternion(qArray[1], qArray[2], qArray[3], qArray[0]);
+              addQuaternion(quaternion);
             }
             break;
           default:

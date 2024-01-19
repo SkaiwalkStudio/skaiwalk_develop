@@ -22,9 +22,7 @@ class Result {
 enum GestureType {
   unknown,
   wave,
-  snap,
-  // grab,
-  // release,
+  tap,
 }
 
 const int timeSteps = 20;

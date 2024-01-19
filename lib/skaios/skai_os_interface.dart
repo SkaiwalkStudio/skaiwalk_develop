@@ -69,6 +69,7 @@ enum WatchSystemServiceType {
 
 enum MotionTrackingServiceType {
   coordinate,
+  quaternion,
 }
 
 enum GestureDetectServiceType {

@@ -15,6 +15,7 @@ import 'log_view.dart';
 import '../skaios/skai_os_interface.dart';
 import '../skaios/skaios_provider.dart';
 import 'watch_connection_view.dart';
+import 'package:vector_math/vector_math_64.dart' show Quaternion, Vector3;
 
 bool bluetoothLog = true;
 bool voiceRecognitionService = false;
@@ -228,6 +229,43 @@ class DevelopScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
+              StreamBuilder<Quaternion>(
+                stream: Provider.of<SkaiOSProvider>(context, listen: false)
+                    .quaternionStream,
+                initialData: Quaternion(1, 0, 0, 0),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    Quaternion quaternion = snapshot.data!;
+                    Vector3 euler = quaternion.rotate(Vector3(0, 0, 1));
+                    // if (_cube != null) {
+                    //   _cube!.rotation.x += euler.x;
+                    //   _cube!.rotation.y -= euler.y;
+                    //   _cube!.rotation.z += euler.z;
+                    //   _cube!.updateTransform();
+                    //   _scene.update();
+                    // }
+
+                    return Column(
+                      children: [
+                        Text("qw:${quaternion.w.toStringAsFixed(2)} "
+                            "qx:${quaternion.x.toStringAsFixed(2)} "
+                            "qy:${quaternion.y.toStringAsFixed(2)} "
+                            "qz:${quaternion.z.toStringAsFixed(2)}"),
+                        Text("Gravity x:${euler.x.toStringAsFixed(2)} "
+                            "y:${euler.y.toStringAsFixed(2)} "
+                            "z:${euler.z.toStringAsFixed(2)}"),
+                        // Expanded(
+                        //   child: Cube(
+                        //     onSceneCreated: _onSceneCreated,
+                        //   ),
+                        // ),
+                      ],
+                    );
+                  } else {
+                    return const Text("no data");
+                  }
+                },
               ),
             ]),
           )),

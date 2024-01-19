@@ -72,6 +72,30 @@ class NotifyResolver {
           );
         }
         break;
+      case NotifyKey.keyQuaternionData:
+        {
+          final currentTime = DateTime.now().millisecondsSinceEpoch;
+          final gsensorBuffer = Uint8List.fromList(pValue);
+          final byteData = ByteData.sublistView(gsensorBuffer);
+          List<double> dataset = [];
+          int offset = 0;
+          double quaternionW = byteData.getFloat32(offset, Endian.little);
+          double quaternionX = byteData.getFloat32(offset + 4, Endian.little);
+          double quaternionY = byteData.getFloat32(offset + 8, Endian.little);
+          double quaternionZ = byteData.getFloat32(offset + 12, Endian.little);
+          dataset.addAll([
+            quaternionW / 100.0,
+            quaternionX / 100.0,
+            quaternionY / 100.0,
+            quaternionZ / 100.0,
+          ]);
+          await notifySkaiOSProvider(
+            ServiceType.motionTracking,
+            MotionTrackingServiceType.quaternion.index,
+            param: dataset,
+          );
+        }
+        break;
       default:
         break;
     }

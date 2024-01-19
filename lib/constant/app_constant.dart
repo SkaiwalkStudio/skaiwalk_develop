@@ -79,7 +79,7 @@ class AppConstant {
       ConfigGsensor(featureCount: 3, bufferSizePerSample: 6);
   static const List<String> gestureTable = [
     "unknown",
-    "tap",
     "wave",
+    "tap",
   ];
 }
