@@ -7,6 +7,7 @@ import 'package:skaiwalk_develop/constant/text_constant.dart';
 import '../constant/app_constant.dart';
 import '../skaios/watch_peripheral_provider.dart';
 import 'app_dialog.dart';
+import 'common/silder.dart';
 import 'common_menu_card.dart';
 import '../service/external_storage_service.dart';
 import '../locator.dart';
@@ -190,6 +191,19 @@ class DevelopScreen extends StatelessWidget {
                   }
                 },
               ),
+              ListTile(
+                title: const Text("Gesture Acceleration Threshold"),
+                trailing: Selector<SkaiOSProvider, int>(
+                    selector: (_, provider) => provider.accelThreshold,
+                    builder: (context, accelThreshold, child) => Text(
+                        "$accelThreshold",
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.secondary))),
+                onTap: () {
+                  showGestureAccelThresholdDialog(
+                      context, locator<SkaiOSProvider>().accelThreshold);
+                },
+              ),
               Text(
                 "Gesture Data",
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -315,5 +329,29 @@ class DevelopScreen extends StatelessWidget {
         ]),
       ),
     ]));
+  }
+
+  void showGestureAccelThresholdDialog(BuildContext context, int threshold) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AppDialogs.loadingDialog(
+          child: SizedBox(
+            height: 100,
+            child: CommonSlider(
+              initialValue: (threshold < 1) ? 1.0 : threshold.toDouble(),
+              min: 1,
+              max: 255,
+              divisions: 254,
+              onChanged: (threshold) {
+                locator<SkaiOSProvider>()
+                    .setGestureAccelLimitThreshold(threshold.toInt());
+              },
+              hint: 'Gesture Accel Threshold',
+            ),
+          ),
+        );
+      },
+    );
   }
 }

@@ -6,6 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:win_ble/win_ble.dart';
+import '../communicate/communicate_protocol.dart';
 import '../constant/app_constant.dart';
 import '../model/inertial_model.dart';
 import '../ui/app_dialog.dart';
@@ -221,6 +222,31 @@ class SkaiOSProvider extends ChangeNotifier {
   set isRecordingAccelerometer(bool value) {
     _isRecordingAccelerometer = value;
     notifyListeners();
+  }
+
+  /// [Test]Gesture Acceleration ///
+  int _accelThreshold = 8;
+  int get accelThreshold => _accelThreshold;
+  set accelThreshold(int val) {
+    if (val != _accelThreshold) {
+      _accelThreshold = val;
+      notifyListeners();
+    }
+  }
+
+  Future<void> syncWatchGestureAccelThreshold(int threshold) async {
+    await l1Send(L1SendType.l1SendGestureAccelLimitThreshold, param: threshold);
+  }
+
+  Timer? smoothSlidingTimer;
+  void setGestureAccelLimitThreshold(int threshold) async {
+    if (smoothSlidingTimer != null) {
+      smoothSlidingTimer?.cancel();
+    }
+    accelThreshold = threshold;
+    smoothSlidingTimer = Timer(const Duration(milliseconds: 200), () {
+      syncWatchGestureAccelThreshold(accelThreshold);
+    });
   }
 
   // Create a StreamController for Quaternion
